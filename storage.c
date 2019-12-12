@@ -51,13 +51,48 @@ static void printStorageInside(int x, int y) {
 //and allocate memory to the context pointer
 //int x, int y : cell coordinate to be initialized
 static void initStorage(int x, int y) {
+
+	// decrese size of system
+	storedCnt -= 1;
+
+	// re-initialize member variables
+	(*(deliverySystem + x) + y)->cnt = 0;
+	(*(deliverySystem + x) + y)->room = 0;
+	(*(deliverySystem + x) + y)->building = 0;
+
+	// clear passwd
+	memset((*(deliverySystem + x) + y)->passwd, 0, PASSWD_LEN + 1);
+
+	// if context has been allocated, then release memory of context
+	if ((*(deliverySystem + x) + y)->context != NULL) {
+		free((*(deliverySystem + x) + y)->context);
+	}
+
+	// allocate memory to context
+	(*(deliverySystem + x) + y)->context = (char*) calloc(sizeof(char), 0);
 }
 
 //get password input and check if it is correct for the cell (x,y)
 //int x, int y : cell for password check
 //return : 0 - password is matching, -1 - password is not matching
 static int inputPasswd(int x, int y) {
-	return -1;
+
+	// get passwd string from stdin
+	char buff[PASSWD_LEN + 1] = { 0, };
+	printf(" - passwd : ");
+	scanf("%s", buff);
+
+	/*
+	   1. check storage is filled
+	   2. check equlaity from input of stdin to existing storage's password
+	*/
+	if ((str_checkStorage(x, y) > 0) &&
+			(strlen((*(deliverySystem + x) + y)->passwd) == strlen(buff)) &&
+			(strncmp((*(deliverySystem + x) + y)->passwd, buff, strlen(buff)) == 0)) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 
@@ -317,7 +352,18 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 //int x, int y : coordinate of the cell to extract
 //return : 0 - successfully extracted, -1 = failed to extract
 int str_extractStorage(int x, int y) {
-	return -1;
+	// check validity of storage by password
+	if (inputPasswd(x, y) == 0) {
+
+		// if valid, print and
+		printf("%s\n", (*(deliverySystem + x) + y)->context);
+
+		// re-initialize
+		initStorage(x, y);
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 //find my package from the storage
