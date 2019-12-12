@@ -70,7 +70,43 @@ static int inputPasswd(int x, int y) {
 //char* filepath : filepath and name to write
 //return : 0 - backup was successfully done, -1 - failed to backup
 int str_backupSystem(char* filepath) {
-	return -1;
+
+	int rowIndex = 0;
+	int colIndex = 0;
+
+	FILE* fp = fopen(filepath, "w");
+
+	if (fp == NULL) {
+		// return -1 if non-exist
+		return -1;
+	} else {
+		// write system's size to backup file
+		fprintf(fp, "%d %d\n", systemSize[0], systemSize[1]);
+
+		// write master password to backup file
+		fprintf(fp, "%s\n", masterPassword);
+
+		// iterate all storage
+		for (rowIndex = 0 ; rowIndex < systemSize[0] ; ++rowIndex) {
+			for (colIndex = 0 ; colIndex < systemSize[1] ; ++colIndex) {
+
+				// if filled storage, then print data
+				if (str_checkStorage(rowIndex, colIndex) > 0) {
+					fprintf(fp, "%d %d %d %d %s %s\n",
+							rowIndex, colIndex,
+							(*(deliverySystem + rowIndex) + colIndex)->building,
+							(*(deliverySystem + rowIndex) + colIndex)->room,
+							(*(deliverySystem + rowIndex) + colIndex)->passwd,
+							(*(deliverySystem + rowIndex) + colIndex)->context);
+				}
+			}
+		}
+
+		// close file pointer
+		fclose(fp);
+
+		return 0;
+	}
 }
 
 
@@ -246,7 +282,32 @@ int str_checkStorage(int x, int y) {
 //char passwd[] : password string (4 characters)
 //return : 0 - successfully put the package, -1 - failed to put
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE+1], char passwd[PASSWD_LEN+1]) {
-	return -1;
+
+	// fill member variables
+	(*(deliverySystem + x) + y)->building = nBuilding;
+	(*(deliverySystem + x) + y)->room = nRoom;
+	(*(deliverySystem + x) + y)->cnt = 1;
+
+	// clear and fill password
+	memset((*(deliverySystem + x) + y)->passwd, 0, PASSWD_LEN + 1);
+	strncpy((*(deliverySystem + x) + y)->passwd, passwd, strlen(passwd));
+	
+	if (str_checkStorage(x, y) > 0) {
+		// if storage already has been filled, release memory of context
+		// do not increase system size, cause already occupied
+		free((*(deliverySystem + x) + y)->context);
+	} else {
+		// if storage not has been filled, increase system size
+		storedCnt += 1;
+	}
+
+	// allicate memory of context by 0
+	(*(deliverySystem + x) + y)->context = (char*) calloc(sizeof(char), strlen(msg) + 1);
+
+	// and copy msg
+	strncpy((*(deliverySystem + x) + y)->context, msg, strlen(msg));
+
+	return 0;
 }
 
 
