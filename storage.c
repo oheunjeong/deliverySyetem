@@ -371,5 +371,28 @@ int str_extractStorage(int x, int y) {
 //int nBuilding, int nRoom : my building/room numbers
 //return : number of packages that the storage system has
 int str_findStorage(int nBuilding, int nRoom) {
-	return 0;
+	
+	int cnt = 0;
+	int rowIndex = 0;
+	int colIndex = 0;
+
+	/*
+	   iterate all storage
+   	*/
+	for (rowIndex = 0 ; rowIndex < systemSize[0] ; ++rowIndex) {
+		for (colIndex = 0 ; colIndex < systemSize[1] ; ++colIndex) {
+
+			// if storage has been filled, and correct position
+			if ((str_checkStorage(rowIndex, colIndex) > 0) &&
+					((*(deliverySystem + rowIndex) + colIndex)->building == nBuilding) &&
+					((*(deliverySystem + rowIndex) + colIndex)->room == nRoom)) {
+
+				// print and accumulate cnt
+				printf("(%d, %d)\n", rowIndex, colIndex);
+				cnt += 1;
+			}
+		}
+	}
+
+	return cnt;
 }
